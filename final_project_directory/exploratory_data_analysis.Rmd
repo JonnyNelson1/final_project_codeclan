@@ -5,12 +5,78 @@ date: "07/02/2022"
 output: html_document
 ---
 
+# LendingClub: Predicting Loan Defaults
+* who is likely to default?
+* who to lend to in the future?
+
 ```{r}
 library(janitor)
 library(tidyverse)
-library(readxl)
 
-read_csv("defaults_data/lending_club_loans.csv")
+loans_dictionary <- read_csv("defaults_data/LCDataDictionary.csv")
+loans <- read_csv("defaults_data/lending_club_loans.csv")
+knitr::kable(loans_dictionary)
 ```
 
+<br>
+
+::: {.emphasis}
+## Noteable points
+* acc_open_past_24mths - What are number of trades? - All NA values?
+* addrs_state - Mutate on the state name for geospatial mapping
+* annual_inc_joint & application_type - can be selected out as all registrations provided are application_type == INDIVIDUAL - 3 NA's for application type.
+* avg_cur_bal, bc_open_to_buy, bc_util - All NA's
+* chargeoff_within_12_mths - only 148 NA's - otherwise == 0
+* collection_recovery_fee - LendingClub expense
+* collections_12_mths_ex_med - No of collections
+* delinq_2yrs - 30+ past due incidence rate
+* delinq_amnt - loads of NA's and 0's
+* desc - only avaliable for 1/4 of observations - text analysis???
+* dti - debt obligations/monthly income
+* dti_joint - NA's as expected
+* earliest_cr_line - credint line opening month
+* emp_length - employment length time
+* emp_title - Employer Title replaces Employer Name for all loans listed after 9/23/2013 - investigate further
+* fico_range -> get mean?
+* funded_amnt - $ commited to that loan at that point in time
+* funded_amnt_inv - $ funded by investors? comming from peer-to-peers lending?
+* grade - need to figure out different grades of loans
+* home_ownership - rent, own, mortgage or other
+* id - unique for loan
+* il_util - ratio of total current balance to credit limit on all accounts? Look into this one further
+* initial_list_status - W and F? 
+* inq_last_6mths - no of inquiries in previous 6 months
+* inq_fi and inq_last_12m - All NA's
+* installment - monthly's
+* int_rate - interest rate
+* issue_d - issue date
+* last_credit_pull_d - most recent pulled credit for loan
+* last_fico's - last pulled fico's - what is the last pulled?
+* loan_amnt 
+* loan_status - find out difference between observations . . .
+* max_bal_bc - All NA's
+* member_id - unique id for the member - all values are distinct
+* mo_sin . . . - all NA's
+* mort_acc - 
+:::
+
+```{r}
+knitr::kable(loans_dictionary)
+```
+
+
+```{r}
+loans %>%
+  select(mo_sin_old_il_acct, mo_sin_old_rev_tl_op, mo_sin_rcnt_rev_tl_op, mo_sin_rcnt_tl) 
+
+sum(is.na(loans$mo_sin_rcnt_tl))
+
+range(loans$funded_amnt)
+
+unique(loans$loan_status)
+
+n_distinct(loans$member_id)
+
+# summary(loans)
+```
 
