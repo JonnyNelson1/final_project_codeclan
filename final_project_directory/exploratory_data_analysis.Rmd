@@ -114,10 +114,19 @@ loans_cols_na_removed
 * last_pymnt_d, next_pymnt_d & last_pymnt-amnt - all linked 
 * last_credit_pull_d - last month a payment was recieved 
 * last_fico_ranges - ???
-* 
+* collections_12_mths_ex_med - number of collections
+* policy_code - publicly available policy_code == 1???
+* application_type - All individual
+* acc_now_delinq - 1 is yes
+* charge_within_12_mths - Number of charge-offs
+* delinq_amnt - past due amount for which borrower is not able to pay
+* pub_rec_bankruptcies - public recorded bankrupty 
+* tax_lien - a legal claim against that persons assets - (yes/no)
 
 ```{r}
-unique(loans$out_prncp)
+unique(loans$tax_liens)
+
+# sum(loans$application_type == 'INDIVIDUAL', na.rm = TRUE)
 
 knitr::kable(loans_dictionary)
 ```
