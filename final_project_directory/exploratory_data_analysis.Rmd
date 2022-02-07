@@ -57,7 +57,7 @@ knitr::kable(loans_dictionary)
 * max_bal_bc - All NA's
 * member_id - unique id for the member - all values are distinct
 * mo_sin . . . - all NA's
-* mort_acc - 
+* mort_acc - all NA's 
 :::
 
 ```{r}
@@ -67,9 +67,9 @@ knitr::kable(loans_dictionary)
 
 ```{r}
 loans %>%
-  select(mo_sin_old_il_acct, mo_sin_old_rev_tl_op, mo_sin_rcnt_rev_tl_op, mo_sin_rcnt_tl) 
+  select(mort_acc) 
 
-sum(is.na(loans$mo_sin_rcnt_tl))
+sum(is.na(loans$mort_acc))
 
 range(loans$funded_amnt)
 
@@ -77,6 +77,48 @@ unique(loans$loan_status)
 
 n_distinct(loans$member_id)
 
-# summary(loans)
+summary(loans)
+
+# Summary of loans gives all the variables that have NA's so just going to plug these in and remove them straight away to remove hassle
+
+# Should be left with 59 variables to sort through and understand
+```
+
+```{r}
+# A function to get rid of all variables with a proportion of NA's greater than 95% and assigned to a new object.
+
+loans_cols_na_removed <- loans[lapply(loans, function(x) sum(is.na(x)) / length(x) ) < 0.95]
+loans_cols_na_removed
+```
+
+* pymnt_plant - indicates if a payment plan is inplace - yes or no - as factor
+* remove url 
+* desc - remove the "Borrower added on 12/16/11 > " bit and then do text analysis 
+* visualise by purpose
+* title - loads of vars - text analysis
+* zip_code and addr_state can make a geospatial mapping
+* mths_since_last_record - ???
+* open_acc - number of open lines of credit in the borrower's credit file
+* pub_rec - number of derogatory public records ???
+* revol_bal - Total credit revolving balance
+* revol_util - Amount of credit the borrower is using relative to all available revolving credit. ???
+* total_acc - total lines of credit lines
+* initial_list_status - initial listing status of the loan???
+* out_prncp(-inv) - remaining outstanding principal for total amount funded (investors)
+* total_pymnt(-inv) - Payments received to date for total amount funded (by investors)
+* total_rec_prncp - Principal recieved to date
+* total_rec_int - Interest recieved to date
+* total_rec_late_fee - Late fees recieved to date
+* recoveries - post charge off gross recovery ??? 
+* collection_recovery_fee - post-charge off collection fee for recovery.
+* last_pymnt_d, next_pymnt_d & last_pymnt-amnt - all linked 
+* last_credit_pull_d - last month a payment was recieved 
+* last_fico_ranges - ???
+* 
+
+```{r}
+unique(loans$out_prncp)
+
+knitr::kable(loans_dictionary)
 ```
 
