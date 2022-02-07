@@ -1,0 +1,15 @@
+---
+title: "exploratory_data_analysis"
+author: "Jonny Nelson"
+date: "07/02/2022"
+output: html_document
+---
+
+```{r}
+library(janitor)
+library(tidyverse)
+library(readxl)
+
+read_xlsx("data/UK GDP Estimates - Time Series.xlsx")
+```
+
