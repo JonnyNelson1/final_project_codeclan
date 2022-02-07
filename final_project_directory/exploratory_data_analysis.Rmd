@@ -10,6 +10,7 @@ library(janitor)
 library(tidyverse)
 library(readxl)
 
-read_xlsx("data/UK GDP Estimates - Time Series.xlsx")
+read_csv("defaults_data/lending_club_loans.csv")
 ```
+
 

@@ -43,15 +43,22 @@ Use this template with associated subheadings to create the documentation to mak
 
 What insights can the business/organisation gain from your analysis and how will your analysis help the business/organisation make better decisions? 
 
+* Building a Machine learning model to predict the likihood a new LendingClub loan will result in default to help make better business decisions
+
 #### Domain knowledge and the business context
 
 Briefly describe the business/organisation and where your analysis fits within its aims/activity. 
+
+* Lending Club - Describe as a company
+* Lending Club aims to approve loans that will be paid in full with interest back to the company, while minimizing defaults. Knowing many variables about a potential new customer and running these through the ML model will predict how likely that person will be to pay back, therefore minimzing risk for lending club.
 
 ## Data
 
 #### Internal and external data sources
 
 Briefly describe your data sources and which were internal (provided by the organisation) and external (not sourced from the organisation's data)
+
+* 
 
 #### Types of data
 
