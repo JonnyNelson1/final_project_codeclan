@@ -161,10 +161,16 @@ loans_clean <- loans_cols_na_removed %>%
            mean_fico_scores = ((fico_range_low + fico_range_high) / 2),
 
 # Grouping NA and "n/a" together for emp_length
-           emp_length = na_if(emp_length, "n/a"))%>%
+           emp_length = na_if(emp_length, "n/a"),
+
+# Make pymnt_plan binary
+           pymnt_plan = if_else(pymnt_plan == "y", 1, 0))%>%
 
 # Removing variables with no relevance
-    select(-c(url, initial_list_status))
+    select(-c(url, initial_list_status, application_type)) %>%
+  
+# Renaming variables to make some more understandable at a glance
+    rename(c("debt_to_income_ratio" = "dti", "no_open_cred_lines" = "open_acc", "derog_pub_rec" = "pub_rec", "revol_util_rate" = "revol_util"))
 ```
 
 ## Joining on the grade and state data sets
