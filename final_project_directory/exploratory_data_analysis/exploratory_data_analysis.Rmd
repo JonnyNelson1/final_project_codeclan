@@ -40,5 +40,37 @@ left_join(loan_status, loans_description, by = "loan_status")
 ```
 
 **Who is likely to default**
-*
+<br>
+* Our data set above is for loans that have been approved and have received funding from investors.3
+* Only loan status's that read "Charged Off" and "Fully Paid" can be counted as fully matured loans.
+* The "Default" observation is indicative of a loan that has been charged off, however there is a chance that the borrower may still pay it off.
+* All other observations are indicative of loans that have not come to maturity.
+* Therefore, all analysis will be carried out with a binary response variable.
+
+## Filtering where the loan_status is "Charged Off" or "Fully Paid"
+
+```{r}
+lc_loans <- loans_clean %>%
+  filter(loan_status %in% c("Charged Off", "Fully Paid"))
+
+# Check that the correct number of observations are given back (33586 + 5653)
+```
+
+## Visualising Loan Status
+
+```{r}
+lc_loans %>%
+  ggplot(aes(x = loan_status, fill = loan_status)) +
+  geom_bar() + 
+  xlab("Loan Status") +
+  ylab("Count") +
+  ggtitle("Count for Loan Status") +
+  guides(fill = guide_legend(title = "Loan Status")) +
+  # scale_y_continuous(labels = scales::percent)
+```
+
+
+
+
+
 
