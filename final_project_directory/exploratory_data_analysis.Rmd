@@ -15,6 +15,8 @@ library(tidyverse)
 
 loans_dictionary <- read_csv("defaults_data/LCDataDictionary.csv")
 loans <- read_csv("defaults_data/lending_club_loans.csv")
+state_info <- read_csv("defaults_data/state_names_info.csv")
+grade_info <- read_csv("defaults_data/grade_info.csv")
 knitr::kable(loans_dictionary)
 ```
 
@@ -128,26 +130,100 @@ unique(loans$issue_d)
 
 sum(loans$initial_list_status == FALSE, na.rm = TRUE)
 
-knitr::kable(loans_cols_na_removed)
+knitr::kable(loans_dictionary)
 
-head(loans_cols_na_removed)
+# range(loans$fico_range_low, na.rm = TRUE)
+  
+# fico_range_low - only as low as 610
+
+# last_fico_range_low - some are 0 - 
 ```
 
+## Cleaning the variables in the loans
+
 ```{r}
-loans_cols_na_removed %>%
+loans_clean <- loans_cols_na_removed %>%
+
+# Making percentage variables into numeric and taking away the '%' sign
     mutate(int_rate = as.numeric(str_replace_all(string = int_rate,
                                                  pattern = "\\%",
                                                  replacement = "")),
            revol_util = as.numeric(str_replace_all(string = revol_util,
                                                  pattern = "\\%",
                                                  replacement = "")),
+           
+# Removing the "Borrower added on mm/dd/yy > " from the desc
            desc = str_replace_all(string = desc,
                                   pattern = c("Borrower.*?>"),
-                                  replacement = ""))%>%
+                                  replacement = ""),
 
-# Removing variables with no relevance 
+# Obtaining the mean FICO scores
+           mean_fico_scores = ((fico_range_low + fico_range_high) / 2),
+
+# Grouping NA and "n/a" together for emp_length
+           emp_length = na_if(emp_length, "n/a"))%>%
+
+# Removing variables with no relevance
     select(-c(url, initial_list_status))
-
-# Borrower added on 12/22/11 > 
 ```
+
+## Joining on the grade and state data sets
+
+```{r}
+left_join(loans_clean, grade_info, by = "sub_grade") 
+
+unique(loans$addr_state)
+
+unique(state_info$state_abb)
+
+x <- anti_join(loans_clean, state_info, by = c("addr_state" = "state_abb")) %>%
+  select(c("addr_state"))
+x
+
+# The anti-join shows us that the observation "DC" is not found in the state_info.csv. 
+
+unique(x$addr_state)
+
+# "DC" and NA values unaccounted for
+
+loans_clean %>%
+  filter(addr_state == c("DC", "WA")) %>%
+  select(c(zip_code, addr_state, issue_d))
+
+# zip_codes "200xx" belong to addr_state "DC" confirming that DC is Washington D.C. - separate from Washington State on the west coast.
+```
+
+### Appending Washington, D.C. and NA to the state_info data frame
+
+```{r}
+# Finding the variable names
+names(state_info)
+
+# Creating a new data.frame to append the info required
+state_abb <- c("DC", NA)
+state_name <- c("Washington, D.C.", NA)
+new_states <- data.frame(state_abb, state_name)
+
+# Binding the data frame onto state_info
+state_info_new <- rbind(state_info, new_states)
+
+# Checking that there are no missing observations
+anti_join(loans_clean, state_info_new, by = c("addr_state" = "state_abb")) %>%
+  select(c("addr_state"))
+
+# Good!
+```
+
+### Joining the two data sets onto loans_clean
+
+```{r}
+# Joining grade_info
+grades_joined <- left_join(loans_clean, grade_info, by = "sub_grade") 
+
+# Joining state_info_new
+loans_joined <- left_join(grades_joined, state_info_new, by = c("addr_state" = "state_abb"))
+
+head(loans_joined)
+```
+
 
