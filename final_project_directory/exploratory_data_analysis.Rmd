@@ -12,6 +12,7 @@ output: html_document
 ```{r}
 library(janitor)
 library(tidyverse)
+library(here)
 
 loans_dictionary <- read_csv("defaults_data/LCDataDictionary.csv")
 loans <- read_csv("defaults_data/lending_club_loans.csv")
@@ -232,4 +233,14 @@ loans_joined <- left_join(grades_joined, state_info_new, by = c("addr_state" = "
 head(loans_joined)
 ```
 
+## Removing all the NA observations
+
+```{r}
+# summary(loans_joined) 
+# 3 NA's across most variables need to be removed
+
+loans_joined %>%
+  group_by(loan_status) %>%
+  summarise(count = n())
+```
 
