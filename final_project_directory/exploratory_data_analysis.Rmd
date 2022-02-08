@@ -124,10 +124,30 @@ loans_cols_na_removed
 * tax_lien - a legal claim against that persons assets - (yes/no)
 
 ```{r}
-unique(loans$tax_liens)
+unique(loans$issue_d)
 
-# sum(loans$application_type == 'INDIVIDUAL', na.rm = TRUE)
+sum(loans$initial_list_status == FALSE, na.rm = TRUE)
 
-knitr::kable(loans_dictionary)
+knitr::kable(loans_cols_na_removed)
+
+head(loans_cols_na_removed)
+```
+
+```{r}
+loans_cols_na_removed %>%
+    mutate(int_rate = as.numeric(str_replace_all(string = int_rate,
+                                                 pattern = "\\%",
+                                                 replacement = "")),
+           revol_util = as.numeric(str_replace_all(string = revol_util,
+                                                 pattern = "\\%",
+                                                 replacement = "")),
+           desc = str_replace_all(string = desc,
+                                  pattern = c("Borrower.*?>"),
+                                  replacement = ""))%>%
+
+# Removing variables with no relevance 
+    select(-c(url, initial_list_status))
+
+# Borrower added on 12/22/11 > 
 ```
 
