@@ -1,0 +1,44 @@
+---
+title: "Exploratory Data Analysis"
+author: "Jonny Nelson"
+date: "08/02/2022"
+output: html_document
+---
+
+# Who is likely to default on their loan?
+
+## Loading in the packages and data
+
+```{r}
+library(janitor)
+library(tidyverse)
+library(here)
+
+loans_clean <- read_csv(here("clean_data/loans_clean.csv"))
+head(loans_clean)
+```
+
+
+# Initial Exploration of the Response Variable - loan_status
+
+```{r}
+# Description of each loan_status obtained from Lending Club website
+description <- c("Loan has been fully paid off.", "Loan for which there is no longer a reasonable expectation of further payments.", "While the loan was paid off, the loan application today would no longer meet the credit policy and wouldn't be approved on to the marketplace.", "While the loan was charged off, the loan application today would no longer meet the credit policy and wouldn't be approved on to the marketplace.", "Loan is up to date on current payments.", "The loan is past due but still in the grace period of 15 days.", "Loan hasn't been paid in 31 to 120 days (late on the current payment).", 
+"Loan hasn't been paid in 16 to 30 days (late on the current payment).", 
+"Loan is defaulted on and no payment has been made for more than 121 days.")
+
+# Looking at the loan_status unique variables
+loan_status <- loans_clean %>%
+                group_by(loan_status) %>%
+                summarise(count = n())
+
+# Obtain a new data frame to join to the summarized data frame
+loans_status_name <- loan_status[,1, drop = FALSE]
+loans_description <- data.frame(loans_status_name, description)
+
+left_join(loan_status, loans_description, by = "loan_status")
+```
+
+**Who is likely to default**
+*
+

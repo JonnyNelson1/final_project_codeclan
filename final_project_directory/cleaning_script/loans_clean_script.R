@@ -1,4 +1,7 @@
 # Loading the packages:
+
+
+
 library(janitor)
 library(tidyverse)
 library(here)
@@ -9,10 +12,10 @@ library(here)
 
 
 
-loans_dictionary <- read_csv(here("defaults_data/LCDataDictionary.csv"))
-loans <- read_csv(here("defaults_data/lending_club_loans.csv"))
-state_info <- read_csv(here("defaults_data/state_names_info.csv"))
-grade_info <- read_csv(here("defaults_data/grade_info.csv"))
+loans_dictionary <- read_csv(here("raw_data/LCDataDictionary.csv"))
+loans <- read_csv(here("raw_data/lending_club_loans.csv"))
+state_info <- read_csv(here("raw_data/state_names_info.csv"))
+grade_info <- read_csv(here("raw_data/grade_info.csv"))
 
 
 
@@ -80,5 +83,5 @@ grades_joined <- left_join(loans_clean, grade_info, by = "sub_grade")
 loans_joined <- left_join(grades_joined, state_info_new,
                           by = c("addr_state" = "state_abb"))
 
-write_csv(x = loans_clean, here("clean_data/loans_clean.csv"))
+write_csv(x = loans_joined, here("clean_data/loans_clean.csv"))
 
