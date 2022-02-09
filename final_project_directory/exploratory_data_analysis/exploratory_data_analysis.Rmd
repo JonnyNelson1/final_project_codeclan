@@ -120,10 +120,58 @@ lc_loans %>%
 * Loans made with a repayment period of 36 months are far more likely to be paid back, compared to loans of a 60 months term.
 * Our data goes over the great financial crisis, so it is likely that some of the longer term loans are implicated by this fact.
 * If I take the issue date for the loan along with term length, I can analyse the range of the repayment period. 
+* Can also figure out how much of the "Charged Off" loans was paid back before being charged off
+
+# Looking at Home Ownership status 
 
 ```{r}
-lc_loans
+lc_loans %>%
+  filter(home_ownership %in% c("OWN", "MORTGAGE", "RENT")) %>%
+  ggplot() +
+  geom_bar(aes(x = loan_status, fill = home_ownership), position = "dodge") + 
+  xlab("Loan Status") +
+  ylab("Count") +
+  ggtitle("Count for Loan Status") +
+  guides(fill = guide_legend(title = "Living Status")) 
+# unique(lc_loans$home_ownership)
 ```
+
+* It is hard to determine anything from the graph above. We need to know if the proportions are much different between all categorys in the loans that are "Charged Off" and "Paid Off"
+
+```{r}
+charged_off <- lc_loans %>%
+  filter(loan_status == "Charged Off") 
+fully_paid <- lc_loans %>%
+  filter(loan_status == "Fully Paid") 
+
+charged_off %>%
+  filter(home_ownership %in% c("OWN", "MORTGAGE", "RENT")) %>%
+  group_by(home_ownership) %>%
+  summarise(count = n(),
+            percentage = (count / nrow(charged_off))*100) %>%
+  mutate_if(is_numeric, ~round(., 2)) 
+  
+fully_paid %>%
+  filter(home_ownership %in% c("OWN", "MORTGAGE", "RENT")) %>%
+  group_by(home_ownership) %>%
+  summarise(count = n(),
+            percentage = (count / nrow(fully_paid))*100) %>%
+  mutate_if(is_numeric, ~round(., 2)) 
+```
+
+**Difference between proportions**
+* The difference between charged off and fully paid for home ownership Own is negligable.
+* The difference between charged off and fully paid for home ownership Rent is 3.09%
+* The difference between charged off and fully paid for home ownership Own is 3.36%
+
+# Need to assess how much of the "Charged Off" loans have been recieved
+
+```{r}
+# need to combine issue_d, 
+lc_loans %>%
+  
+```
+
 
 
 
