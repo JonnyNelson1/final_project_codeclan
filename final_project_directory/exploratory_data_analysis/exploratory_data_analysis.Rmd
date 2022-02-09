@@ -59,18 +59,71 @@ lc_loans <- loans_clean %>%
 ## Visualising Loan Status
 
 ```{r}
+percentages <- lc_loans %>%
+  group_by(loan_status) %>%
+  summarise(count = n(),
+            percentage = (count / nrow(lc_loans))*100) %>%
+  mutate_if(is_numeric, ~round(., 2)) 
+  
+  
 lc_loans %>%
   ggplot(aes(x = loan_status, fill = loan_status)) +
   geom_bar() + 
   xlab("Loan Status") +
   ylab("Count") +
   ggtitle("Count for Loan Status") +
-  guides(fill = guide_legend(title = "Loan Status")) +
+  guides(fill = guide_legend(title = "Loan Status")) 
   # scale_y_continuous(labels = scales::percent)
+
+# 14.41 85.59
+```
+
+* Of the remaining loan_status observations, 85.59% are "Fully Paid" and 14.41% are "Charged Off". This is actually a fairly high default rate if for investors looking to make a return. 
+
+* How do these loans stratify by grade, sub-grade, term, interest rate?
+* How much is paid back before the borrower is charged off?
+
+```{r}
+ggplot(lc_loans) +
+  geom_histogram(aes(x = grade, fill = loan_status),
+                 stat = "count",
+                 position = "dodge") 
 ```
 
 
+```{r}
+ggplot(lc_loans) +
+  geom_histogram(aes(x = sub_grade, fill = loan_status),
+                 stat = "count",
+                 position = "dodge") +
+  theme(axis.text = element_text(size = 7), text = element_text(size = 11)) +
+  ggtitle("Histogram of the Borrowers by Sub-Grade")
+```
+**Do Statistical Analysis of the distributions**
 
+* Very different distributions here.
+* The "Fully Paid" distribution is a right skewed distribution. The majority of the loans in this distribution are found in the grade B, A then C.
+* The "Charged Off" distribution is a bi-modal distribution, which is a lot flatter therefore has a wider standard deviation. The majority of the loans in this distribution are found in the grade B, C then D.
+
+```{r}
+lc_loans %>%
+  ggplot(aes(x = loan_status, fill = term)) +
+  geom_bar() + 
+  xlab("Loan Status") +
+  ylab("Count") +
+  ggtitle("Count for Loan Status") +
+  guides(fill = guide_legend(title = "Term Length")) 
+  # scale_y_continuous(labels = scales::percent)
+```
+
+* Very stark split between loan_status based on the term.
+* Loans made with a repayment period of 36 months are far more likely to be paid back, compared to loans of a 60 months term.
+* Our data goes over the great financial crisis, so it is likely that some of the longer term loans are implicated by this fact.
+* If I take the issue date for the loan along with term length, I can analyse the range of the repayment period. 
+
+```{r}
+lc_loans
+```
 
 
 
