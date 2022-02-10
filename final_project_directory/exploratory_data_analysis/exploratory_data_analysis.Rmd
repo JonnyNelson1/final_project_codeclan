@@ -167,11 +167,108 @@ fully_paid %>%
 # Need to assess how much of the "Charged Off" loans have been recieved
 
 ```{r}
-# need to combine issue_d, 
 lc_loans %>%
-  
+
+# Gain and loss magnitudes
+
+  mutate(loan_amnt_lost = if_else(loan_status == "Charged Off", loan_amnt - total_pymnt_inv, 0),
+         
+# recoveries need to be considered?
+         loan_amnt_gain = if_else(loan_status == "Fully Paid", total_rec_int, 0),
+
+# Gain and Loss percentages
+
+         loan_percent_lost = if_else(loan_status == "Charged Off", (1-(total_pymnt_inv / loan_amnt))*100, 0),
+         loan_percent_gain = if_else(loan_status == "Fully Paid", (loan_amnt_gain / loan_amnt)*100, 0)) %>%
+
+# Getting the summary table
+
+  group_by(loan_status) %>%
+  summarise(total_losses = sum(loan_amnt_lost),
+            total_gains = sum(loan_amnt_gain),
+            average_percentage_loss = mean(loan_percent_lost),
+            average_percentage_gain = mean(loan_percent_gain))
 ```
 
+```{r}
+lc_loans %>%
+  mutate(dollar_amount = total_pymnt - loan_amnt,
+         percentage_change = (dollar_amount / loan_amnt) * 100) %>%
+  group_by(term) %>%
+  summarise(returns = sum(dollar_amount),
+            total_loans = sum(loan_amnt),
+            return_percentage = returns/total_loans * 100)
+```
+
+# Summary Table 
+
+```{r}
+response_variable <- c("Charged Off", "Fully Paid")
+data_proportion_percentage <- c(14.41, 85.59)
+mean_percentage_change <- c(-46.25, 18.28)
+absolute_change_in_dollars <- c(73650655, 32120297)
+summary_table <- data.frame(response_variable, data_proportion_percentage, mean_percentage_change, absolute_change_in_dollars)
+summary_table
+```
+
+```{r}
+# Sum total of all loans made
+lc_loans %>%
+  summarise(sum = sum(loan_amnt))
+
+# Average rate of return on all loans made by investors
+((73650655 - 32120297) / 436915675) * 100
+```
+
+
+# Histogram of Default Rates vs Mean FICO scores
+
+```{r}
+  ggplot(lc_loans) +
+  geom_histogram(aes(x = mean_fico_scores, fill = loan_status),
+                 stat = "count",
+                 position = "dodge",
+                 bins = 100) +
+  theme(axis.text = element_text(size = 7), text = element_text(size = 11)) +
+  ggtitle("Histogram of the Borrowers by Mean FICO scores")
+```
+
+# Description is NA or not split to see if that affects the default rate
+
+```{r}
+lc_loans %>%
+  mutate(desc = if_else(desc %in% NA, "No", "Yes" )) %>%
+  ggplot() +
+  geom_bar(aes(x = loan_status, fill = desc), position = "dodge") + 
+  xlab("Loan Status") +
+  ylab("Count") +
+  ggtitle("Count for Loan Status") +
+  guides(fill = guide_legend(title = "What a Description Supplied?")) 
+# unique(lc_loans$home_ownership)
+```
+
+# Split by purpose to see if that affects the default rate
+
+```{r}
+lc_loans %>%
+  ggplot() +
+  geom_bar(aes(x = loan_status, fill = purpose), position = "dodge") + 
+  xlab("Loan Status") +
+  ylab("Count") +
+  ggtitle("Count for Loan Status") +
+  guides(fill = guide_legend(title = "What Purpose was Selected?")) 
+```
+
+# Split by Loan Status, Purpose then get difference between proportions:
+
+```{r}
+lc_loans %>%
+  group_by(loan_status, purpose) %>%
+  summarise(number_of_loans = n())
+```
+
+# Check that Loan amount and funded amount are the same - if so remove one column
+# Why is funded amount investment sometimes a couple quid short
 
 
 
