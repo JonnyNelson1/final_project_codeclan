@@ -267,8 +267,53 @@ lc_loans %>%
   summarise(number_of_loans = n())
 ```
 
+# Employment Length varying with loan_status
+
+```{r}
+lc_loans %>%
+  mutate(emp_length = as.factor(emp_length)) %>%
+  ggplot() +
+  geom_bar(aes(x = loan_status, fill = state_name), position = "dodge") + 
+  xlab("Loan Status") +
+  ylab("Count") +
+  ggtitle("Count for Loan Status") +
+  guides(fill = guide_legend(title = "Employment Length")) 
+```
+
+**Extension**
+
+
+# Distribution of Absolute Dollar Amounts Gained/lost
+
+```{r}
+lc_loans %>%
+  mutate(dollar_amount = total_pymnt - loan_amnt,
+         percentage_change = (dollar_amount / loan_amnt) * 100) %>%
+  ggplot() +
+  geom_histogram(aes(x = dollar_amount), bins = 1000, fill = "steel blue")
+```
+
+* The graph above visualizes the absolute amount of dollars gained or lost on all the loans.
+* These are essentially two separate distributions, where the fully paid loans are a right skewed distribution.
+* This is opposed by the distribution for the charged off loans, which has a much greater standard deviation and skew. 
+
+# Distribution of Percentage Gain or Lost
+
+```{r}
+lc_loans %>%
+  mutate(dollar_amount = total_pymnt - loan_amnt,
+         percentage_change = (dollar_amount / loan_amnt) * 100) %>%
+  ggplot() +
+  geom_histogram(aes(x = percentage_change), bins = 1000, fill = "steel blue")
+```
+
+* The loans that are charged off have a very wide distribution in terms of returns. If an investor is unlucky enough to invest in a loan that will be charged off, the mean losses are around 50%
+* Compared to loans that are fully paid back, the mean gains are only around around ~ 18%. So an investor would need far more loans that are paid back than loans defaulted, in their portfolio. 
+
+# Questions
+
 # Check that Loan amount and funded amount are the same - if so remove one column
 # Why is funded amount investment sometimes a couple quid short
-
+# Upsampling and downsampling
 
 
