@@ -83,13 +83,15 @@ lc_loans %>%
 * How do these loans stratify by grade, sub-grade, term, interest rate?
 * How much is paid back before the borrower is charged off?
 
+# Loan status split by grade
+
 ```{r}
 ggplot(lc_loans) +
   geom_histogram(aes(x = grade, fill = loan_status),
                  stat = "count",
                  position = "dodge") 
 ```
-
+# Loan Status split by sub-grade
 
 ```{r}
 ggplot(lc_loans) +
@@ -99,6 +101,44 @@ ggplot(lc_loans) +
   theme(axis.text = element_text(size = 7), text = element_text(size = 11)) +
   ggtitle("Histogram of the Borrowers by Sub-Grade")
 ```
+
+# Sub-grade heat map for proportions loan status
+
+## Getting the proportions
+
+```{r}
+prop_sub_grade <- lc_loans %>%
+  mutate(loan_status = if_else(loan_status == "Fully Paid", 1, 0)) %>%
+  group_by(sub_grade, loan_status) %>%
+  summarise(n = n()) %>%
+  mutate(proportions = n / sum(n)) %>%
+  filter(loan_status == 1) %>%
+  select(sub_grade, proportions)
+
+write_csv(x = prop_sub_grade, here("clean_data/summary_table.csv"))
+```
+
+## Joining the Proportions onto the orginal data set
+
+```{r}
+left_join(lc_loans, prop_sub_grade, by = "sub_grade", colour = "black") %>%
+  ggplot() + 
+  aes(x = sub_grade, fill = proportions) +
+  geom_histogram(stat = "count") +
+  scale_fill_distiller(palette = 11) + 
+  theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank()) +
+  xlab("Sub Grade") +
+  ylab("Count") +
+  ggtitle("Histogram for Default Rates by Sub-Grade") +
+  guides(fill = guide_legend(title = "Proportions")) 
+```
+
+
 **Do Statistical Analysis of the distributions**
 
 * Very different distributions here.
@@ -106,7 +146,7 @@ ggplot(lc_loans) +
 * The "Charged Off" distribution is a bi-modal distribution, which is a lot flatter therefore has a wider standard deviation. The majority of the loans in this distribution are found in the grade B, C then D.
 
 ```{r}
-lc_loans %>%
+lc_loans
   ggplot(aes(x = loan_status, fill = term)) +
   geom_bar() + 
   xlab("Loan Status") +
@@ -163,6 +203,8 @@ fully_paid %>%
 * The difference between charged off and fully paid for home ownership Own is negligable.
 * The difference between charged off and fully paid for home ownership Rent is 3.09%
 * The difference between charged off and fully paid for home ownership Own is 3.36%
+
+# 
 
 # Need to assess how much of the "Charged Off" loans have been recieved
 
