@@ -204,7 +204,41 @@ fully_paid %>%
 * The difference between charged off and fully paid for home ownership Rent is 3.09%
 * The difference between charged off and fully paid for home ownership Own is 3.36%
 
-# 
+# Loan Status by Employment Length
+
+```{r}
+# Mutating Employment Length to be a Factoral
+
+lc_loans %>%
+  mutate(emp_length = factor(x = emp_length,
+                             levels = c("< 1 year", "2 years", "3 years", "4 years", "5 years", "6 years", "7 years", "8 years", "9 years", "10+ years"),
+                             labels = c("More than 1" , "2", "3", "4", "5", "6", "7", "8", "9", "10 +"))) %>%
+  
+# Summary Statistics
+  
+
+
+# Creating the Visualization
+  
+  ggplot() +
+  geom_bar(aes(x = loan_status, fill = emp_length), position = "dodge") + 
+  scale_fill_discrete() + 
+  theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank()) +
+  xlab("Loan Status") +
+  ylab("Count") +
+  ggtitle("Count for Loan Status by Employment Length") +
+  guides(fill = guide_legend(title = "Employment Length")) 
+
+# unique(lc_loans$home_ownership)
+# sum(is.na(lc_loans$emp_length))
+# Over 100 NA's
+``` 
+
 
 # Need to assess how much of the "Charged Off" loans have been recieved
 
