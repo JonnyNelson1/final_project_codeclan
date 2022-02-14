@@ -1,0 +1,78 @@
+---
+title: "ML"
+author: "Jonny Nelson"
+date: "14/02/2022"
+output: html_document
+---
+
+# Reading in Libraries and Data
+
+```{r}
+library(janitor)
+library(tidyverse)
+library(here)
+
+loans_clean <- read_csv(here("clean_data/loans_clean.csv"))
+```
+
+# Variable Engineering
+
+```{r}
+lc_loans <- loans_clean %>%
+  filter(loan_status %in% c("Charged Off", "Fully Paid")) %>%
+  mutate(emp_length = factor(x = emp_length,
+                             levels = c("< 1 year", "2 years", "3 years", "4 years", "5 years", "6 years", "7 years", "8 years", "9 years", "10+ years"),
+                             labels = c("More than 1" , "2", "3", "4", "5", "6", "7", "8", "9", "10 +")),
+         desc = if_else(desc %in% NA, 0, 1 )) 
+
+# Write the cleaned, ML ready into the clean data folder
+# write_csv(x = lc_loans, here("clean_data/lc_loans.csv"))
+```
+
+# Variable Selection
+
+```{r}
+ml_loans <- lc_loans %>%
+  select(c(loan_status, loan_amnt, term, int_rate, installment, sub_grade, emp_length, home_ownership, annual_inc, verification_status, issue_d, pymnt_plan, desc, purpose, debt_to_income_ratio, derog_pub_rec, revol_util_rate, mean_fico_scores, grade))
+head(ml_loans)
+```
+
+# ggpairs
+
+## Splitting the data for ggpairs
+
+```{r}
+split_1 <- ml_loans %>%
+  select(c(loan_status, loan_amnt, term, int_rate))
+split_2 <- ml_loans %>%
+  select(c(loan_status, installment, sub_grade, emp_length))
+split_3 <- ml_loans %>%
+  select(c(loan_status, home_ownership, annual_inc, verification_status))
+split_4 <- ml_loans %>%
+  select(c(loan_status, issue_d, pymnt_plan, desc))
+split_5 <- ml_loans %>%
+  select(c(loan_status, purpose, debt_to_income_ratio, derog_pub_rec))
+split_6 <- ml_loans %>%
+  select(c(loan_status, revol_util_rate, mean_fico_scores, grade))
+```
+
+## Visualising using ggpairs
+
+```{r}
+library(GGally)
+```
+
+```{r}
+split_1 %>%
+  ggpairs()
+```
+* The distributions for the interest rates are slightly different based on loan_status. Loans with higher interest rates have slightly higher rates of defaults.
+* 
+
+```{r}
+ml_loans %>%
+  ggplot() +
+  aes(x = loan_status, y = int_rate) +
+  geom_boxplot()
+```
+

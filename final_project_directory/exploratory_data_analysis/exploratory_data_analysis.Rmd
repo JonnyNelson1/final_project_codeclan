@@ -386,6 +386,81 @@ lc_loans %>%
 * The loans that are charged off have a very wide distribution in terms of returns. If an investor is unlucky enough to invest in a loan that will be charged off, the mean losses are around 50%
 * Compared to loans that are fully paid back, the mean gains are only around around ~ 18%. So an investor would need far more loans that are paid back than loans defaulted, in their portfolio. 
 
+# Considering Subsampling for the imbalanced response variable
+
+## Looking at response variable split
+
+```{r}
+table((lc_loans$loan_status))
+
+# ~ 14 % Charged Off
+# ~ 86 % Fully Paid 
+```
+* Our model would achieve good specificity as almost all of the data is in the Fully Paid category.
+* Sensitivity would be poor will optimize for accuracy and predict everything to be Fully paid
+* Alleviate this problem by Sub-Sampling
+* Sub-Sampling produces models that are better calibrated. A default 50% cut off is more likely to produce better sensitivity (TPR) and specificity (TNR). 
+
+**NB**
+* Sub-sampling must occur inside of resampling - else the resampling process can produce poor estimates of model performance
+* Sub-sampling proccess should only be applied to the analysis set. The assessment set should reflect the event rates seen “in the wild” and, for this reason, the skip argument to step_downsample() and other subsampling recipes steps has a default of TRUE.
+
+## Rebalancing the data
+
+```{r}
+library(tidymodels)
+library(themis)
+balanced_data <- recipe(loan_status ~ ., data = lc_loans) %>%
+                 step_rose(loan_status)
+
+# bd <- balanced_data[["template"]]
+# table((bd$loan_status))
+```
+
+## Create a QDA Model:
+
+```{r}
+library(discrim)
+qda_mod <- 
+  discrim_regularized(frac_common_cov = 0, frac_identity = 0) %>%
+  set_engine("klaR")
+```
+
+## Keep Objects Bound Together in the workflow
+
+```{r}
+qda_rose_wflw <- 
+  workflow() %>% 
+  add_model(qda_mod) %>% 
+  add_recipe(balanced_data)
+qda_rose_wflw
+#> ══ Workflow ══════════════════════════════════════════════════════════
+#> Preprocessor: Recipe
+#> Model: discrim_regularized()
+#> 
+#> ── Preprocessor ──────────────────────────────────────────────────────
+#> 1 Recipe Step
+#> 
+#> ● step_rose()
+#> 
+#> ── Model ─────────────────────────────────────────────────────────────
+#> Regularized Discriminant Model Specification (classification)
+#> 
+#> Main Arguments:
+#>   frac_common_cov = 0
+#>   frac_identity = 0
+#> 
+#> Computational engine: klaR
+
+```
+
+## Model performance
+
+```{r}
+set.seed(5732)
+cv_folds <- vfold_cv(balanced_data, strata = "Class", repeats = 5)
+```
+
 # Questions
 
 # Check that Loan amount and funded amount are the same - if so remove one column
