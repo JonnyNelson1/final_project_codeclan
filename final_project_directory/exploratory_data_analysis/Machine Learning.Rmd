@@ -69,7 +69,7 @@ split_4 <- ml_loans %>%
 split_5 <- ml_loans %>%
   select(c(loan_status, purpose, debt_to_income_ratio, derog_pub_rec))
 split_6 <- ml_loans %>%
-  select(c(loan_status, revol_util_rate, mean_fico_scores, grade))
+  select(c(loan_status, mean_fico_scores, grade))
 ```
 
 ## Visualising using ggpairs
@@ -302,7 +302,7 @@ test %>%
 
 * Loan status is nicely split in the train and test split. 
 
-## Model Building
+# Model Building
 
 ```{r}
 # Loading the library
@@ -365,9 +365,133 @@ summary(glmulti_search_all_mains_two_pairs)
 # Completed.
 ```
 
-## Letting Glmulti Loose
+## Best Model considering AIC
 
 ```{r}
+glmulti_ga_search_with_pairs_aic <- glmulti(
+  loan_status ~ ., 
+  data = train,
+  level = 2,               # Interactions considered
+  method = "g",            # Genetic algorithm approach
+  crit = "aic",            # AIC as criteria
+  confsetsize = 10,        # Keep 10 best models
+  marginality = TRUE,      # Consider pairs only if both main effects in model
+  plotty = F, 
+  report = T,              # No plots, but provide interim reports
+  fitfunction = "glm",     # glm function
+  family = binomial(link = "logit")) # Binomial family for logistic regression
 
+summary(glmulti_ga_search_with_pairs_aic)
+```
+
+## Comparing AUC value
+
+```{r}
+library(pROC)
+library(modelr)
+```
+
+## Model with main BIC
+
+### AUC Train
+
+```{r}
+model_with_mains_bic <- glm(
+  loan_status ~ term + int_rate + annual_inc + derog_pub_rec,
+  data = train,
+  family = binomial(link = "logit")
+)
+roc <- train %>%
+  add_predictions(model_with_mains_bic, type = "response") %>%
+  roc(response = loan_status, predictor = pred)
+
+auc(roc)
+# AUC = 0.682
+```
+
+### AUC Test
+
+```{r}
+roc <- test %>%
+  add_predictions(model_with_mains_bic, type = "response") %>%
+  roc(response = loan_status, predictor = pred)
+
+auc(roc)
+# AUC = 0.7011
+```
+
+
+
+
+## Model with 2 Interactions BIC
+
+### AUC Train
+
+```{r}
+model_with_one_pair_bic <- glm(
+  loan_status ~ loan_amnt + int_rate + installment + annual_inc + derog_pub_rec + annual_inc:installment,
+  data = train,
+  family = binomial(link = "logit")
+)
+roc <- train %>%
+  add_predictions(model_with_one_pair_bic, type = "response") %>%
+  roc(response = loan_status, predictor = pred)
+
+auc(roc)
+# AUC = 0.6793
+```
+
+### AUC Test
+
+```{r}
+roc <- test %>%
+  add_predictions(model_with_one_pair_bic, type = "response") %>%
+  roc(response = loan_status, predictor = pred)
+
+auc(roc)
+# AUC = 0.7015
+```
+
+## Model with 3 Interactions BIC
+
+### AUC Train
+
+```{r}
+model_with_two_pair_bic <- glm(
+  loan_status ~ loan_amnt + int_rate + installment + annual_inc + derog_pub_rec + annual_inc:installment + derog_pub_rec:installment,
+  data = train,
+  family = binomial(link = "logit")
+)
+roc <- train %>%
+  add_predictions(model_with_two_pair_bic, type = "response") %>%
+  roc(response = loan_status, predictor = pred)
+
+auc(roc)
+# AUC = 0.6796
+```
+
+### AUC Test
+
+```{r}
+roc <- test %>%
+  add_predictions(model_with_two_pair_bic, type = "response") %>%
+  roc(response = loan_status, predictor = pred)
+
+auc(roc)
+# AUC = 0.7011
+```
+
+# Final Notes
+
+* Model that is the best is as follows
+
+```{r}
+best_model <- glm(
+  loan_status ~ loan_amnt + int_rate + installment + annual_inc + derog_pub_rec + annual_inc:installment,
+  data = train,
+  family = binomial(link = "logit")
+)
+
+# Highest AUC value for the test set - 0.7015
 ```
 
