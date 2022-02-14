@@ -11,6 +11,7 @@ output: html_document
 library(janitor)
 library(tidyverse)
 library(here)
+library(forcats)
 
 loans_clean <- read_csv(here("clean_data/loans_clean.csv"))
 ```
@@ -23,18 +24,25 @@ lc_loans <- loans_clean %>%
   mutate(emp_length = factor(x = emp_length,
                              levels = c("< 1 year", "2 years", "3 years", "4 years", "5 years", "6 years", "7 years", "8 years", "9 years", "10+ years"),
                              labels = c("More than 1" , "2", "3", "4", "5", "6", "7", "8", "9", "10 +")),
-         desc = if_else(desc %in% NA, 0, 1 )) 
+         desc = if_else(desc %in% NA, 0, 1 )) %>%
+  mutate(emp_length = fct_explicit_na(emp_length, "unknown"))
 
 # Write the cleaned, ML ready into the clean data folder
 # write_csv(x = lc_loans, here("clean_data/lc_loans.csv"))
+
+unique(lc_loans$emp_length)
 ```
 
 # Variable Selection
 
 ```{r}
 ml_loans <- lc_loans %>%
-  select(c(loan_status, loan_amnt, term, int_rate, installment, sub_grade, emp_length, home_ownership, annual_inc, verification_status, issue_d, pymnt_plan, desc, purpose, debt_to_income_ratio, derog_pub_rec, revol_util_rate, mean_fico_scores, grade))
+  select(c(loan_status, loan_amnt, term, int_rate, installment, emp_length, home_ownership, annual_inc, verification_status, pymnt_plan, desc, purpose, debt_to_income_ratio, derog_pub_rec, mean_fico_scores, grade))
 head(ml_loans)
+
+## Retro-actively taking out issue_d and sub_grade as these are variables with very high carnality. May put back into model at a later date
+
+## Retro-actively taking out revol_util_rate as is has NA values, messing up the backwards selection. No clear relevance to loan_status
 ```
 
 # ggpairs
@@ -45,11 +53,11 @@ head(ml_loans)
 split_1 <- ml_loans %>%
   select(c(loan_status, loan_amnt, term, int_rate))
 split_2 <- ml_loans %>%
-  select(c(loan_status, installment, sub_grade, emp_length))
+  select(c(loan_status, installment, emp_length))
 split_3 <- ml_loans %>%
   select(c(loan_status, home_ownership, annual_inc, verification_status))
 split_4 <- ml_loans %>%
-  select(c(loan_status, issue_d, pymnt_plan, desc))
+  select(c(loan_status, pymnt_plan, desc))
 split_5 <- ml_loans %>%
   select(c(loan_status, purpose, debt_to_income_ratio, derog_pub_rec))
 split_6 <- ml_loans %>%
@@ -62,17 +70,136 @@ split_6 <- ml_loans %>%
 library(GGally)
 ```
 
+## Split 1
+
 ```{r}
 split_1 %>%
   ggpairs()
 ```
 * The distributions for the interest rates are slightly different based on loan_status. Loans with higher interest rates have slightly higher rates of defaults.
-* 
+* Far more loans default with term lengths of 60 months compared to loans of 36 months.
+
+### Investigating Interest Rates:
 
 ```{r}
 ml_loans %>%
   ggplot() +
   aes(x = loan_status, y = int_rate) +
   geom_boxplot()
+```
+
+### Investigating Term Length:
+
+```{r}
+ml_loans %>%
+  ggplot() +
+  geom_bar(aes(x = loan_status, fill = term), position = "dodge") + 
+  scale_fill_discrete() + 
+  theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank()) +
+  xlab("Loan Status") +
+  ylab("Count") +
+  ggtitle("Count for Loan Status by Term Length") +
+  guides(fill = guide_legend(title = "Term Length")) 
+```
+
+## Split 2
+
+```{r}
+split_2 %>%
+  select(-sub_grade) %>%
+  ggpairs()
+
+# sub_grade has a very high cardinality, makes many dummy variables so is too difficult to run on ggpairs, may be able to make into a continuous variable.
+
+# unique(ml_loans$sub_grade)
+
+# 35 specific sub_grades could be made into a continuous variables from 0-35. 
+```
+
+* No obvious correlations here. Employment length may hold some useful information in one of the specific categories.
+
+
+## Split 3
+
+```{r}
+split_3 %>%
+  ggpairs()
+```
+
+* Hard to draw anything meaning form these variables.
+
+### Annual Income 
+
+```{r}
+ggplot(ml_loans) +
+  geom_jitter(aes(x = annual_inc, y = loan_status), shape = 1, 
+              position = position_jitter(h = 0.5)) +
+  xlim(0, 500000)
+
+# Closer inspection of annual income shows people with very large annual incomes are far more likely to fully pay back a loan. 
+```
+
+## Split 4
+
+```{r}
+split_4 %>%
+  select(-issue_d) %>%
+  ggpairs()
+
+# Issue date taken away due to high carnality. May warrant further exploration in the extension.
+```
+
+* Again. No major correlations identified here.
+
+## Split 5
+
+```{r}
+split_5 %>%
+  ggpairs()
+```
+
+* No major correlations here
+
+## Split 6
+
+```{r}
+split_6 %>%
+  ggpairs()
+```
+
+* All variables show some correlation with loan_status
+
+### Visualising the Mean FICO scores
+
+```{r}
+ggplot(ml_loans) +
+  geom_jitter(aes(x = mean_fico_scores, y = loan_status), shape = 1, 
+              position = position_jitter(h = 0.25))
+
+# Divergence between fully paid and charged off begins around a mean FICO score of 750
+```
+
+
+# Backwards Selection to Identify the most notable variables
+
+```{r}
+library(leaps)
+
+regsubsets_backward <- regsubsets(loan_status ~ ., data = ml_loans, nvmax = 12, method = "backward")
+
+plot(regsubsets_backward, scale = "bic")
+```
+
+
+# Summary of ml_loans
+
+```{r}
+summary(ml_loans)
+
 ```
 
