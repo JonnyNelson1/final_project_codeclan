@@ -261,36 +261,113 @@ plot(summary_regsubsets_forward$bic, type = "b")
 
 # 4. Perform a Logistic Regression
 
+## Checking for Aliased variables
+
 * # Looks like term_60_months is first, then installments, purposeCAR and then home_ownershipNONE
 
 ```{r}
-library(fastDummies)
+alias(loan_status ~ ., data = ml_loans_converted)
 
+# No aliased variables found
+```
 
+## Splitting the data into Test Train Sets
+
+```{r}
+set.seed(7)
+
+test_indices <- sample(1:nrow(ml_loans_converted), size = as.integer(nrow(ml_loans_converted) * 0.2))
+
+train <- ml_loans_converted %>%
+  slice(-test_indices)
+
+test <- ml_loans_converted %>%
+  slice(test_indices)
+
+# sanity check
+nrow(train) + nrow(test) == nrow(ml_loans_converted)
+```
+
+## Checking the distributions
+
+```{r}
+train %>%
+  tabyl(loan_status)
+```
+
+```{r}
+test %>%
+  tabyl(loan_status)
+```
+
+* Loan status is nicely split in the train and test split. 
+
+## Model Building
+
+```{r}
+# Loading the library
+library(glmulti)
+
+# Model 1
+model_1 <- glm(loan_status ~ ., data = train, family = binomial(link = "logit"))
+
+summary(model_1)
+```
+
+## Best Model with No Interactions
+
+```{r}
+glmulti_search_all_mains <- glmulti(
+  loan_status ~ ., 
+  data = train,
+  level = 1,               # No interaction considered
+  method = "h",            # Exhaustive approach
+  crit = "bic",            # BIC as criteria
+  confsetsize = 10,        # Keep 10 best models
+  plotty = F, 
+  report = T,              # No plots, but provide interim reports
+  fitfunction = "glm",     # glm function
+  family = binomial(link = "logit")) # binomial family for logistic regression
+
+summary(glmulti_search_all_mains)
+
+ # After 1350 models:
+ # Best model: loan_status ~ 1 + term + int_rate + annual_inc + derog_pub_rec
+# Crit= 24359.344400846
+# Mean crit= 24369.0183010957
 ```
 
 
+## Best Model with 2 Pair Interactions 
+
 ```{r}
-# Term Length
-model_1_pred_term <- glm(loan_status ~ term,
-                         data = ml_loans_converted,
-                         family = binomial(link = "logit"))
+glmulti_search_all_mains_two_pairs <- glmulti(
+  loan_status ~ loan_amnt + int_rate + installment + annual_inc + derog_pub_rec, 
+  data = train,
+  level = 2,               # Interactions considered
+  method = "h",            # Exhaustive approach
+  crit = "bic",            # BIC as criteria
+  confsetsize = 10,        # Keep 10 best models
+  marginality = TRUE,      # consider pairs only if both main effects in model
+  minsize = 7,             # minsize, maxsize and marginality here force 
+  maxsize = 7,             # inclusion of a single pair beyond the five main effects
+  plotty = F, 
+  report = T,              # No plots, but provide interim reports
+  fitfunction = "glm",     # glm function
+  family = binomial(link = "logit")) # binomial family for logistic regression
 
-# Installments 
-model_2_pred_installments <- glm(loan_status ~ installment,
-                                 data = ml_loans_converted,
-                                 family = binomial(link = "logit"))
+summary(glmulti_search_all_mains_two_pairs)
 
-# Purpose == Car 
-model_3_pred_purposecar <- glm(loan_status ~ purpose,
-                               data = ml_loans_converted,
-                               family = binomial(link = "logit"))
+# After 150 models:
+# Best model: loan_status ~ 1 + loan_amnt + int_rate + installment + annual_inc + derog_pub_rec + annual_inc:installment + derog_pub_rec:installment
+# Crit= 24428.8534868457
+# Mean crit= 24431.9232538522
+# Completed.
+```
 
-# Home Ownership == None
-model_4_pred_homeownershipnone <- glm(loan_status ~ home_ownership,
-                                      data = ml_loans_converted,
-                                      family = binomial(link = "logit"))
+## Letting Glmulti Loose
 
-colnames(ml_loans_converted)
+```{r}
+
 ```
 

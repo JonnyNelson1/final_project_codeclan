@@ -14,6 +14,7 @@ library(janitor)
 library(tidyverse)
 library(here)
 
+loans_dict <- read_csv(here(""))
 loans_clean <- read_csv(here("clean_data/loans_clean.csv"))
 head(loans_clean)
 ```
@@ -99,7 +100,8 @@ ggplot(lc_loans) +
                  stat = "count",
                  position = "dodge") +
   theme(axis.text = element_text(size = 7), text = element_text(size = 11)) +
-  ggtitle("Histogram of the Borrowers by Sub-Grade")
+  ggtitle("Histogram of the Borrowers by Sub-Grade") +
+  theme_minimal()
 ```
 
 # Sub-grade heat map for proportions loan status
