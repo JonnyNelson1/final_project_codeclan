@@ -37,15 +37,23 @@ unique(lc_loans$emp_length)
 
 ```{r}
 ml_loans <- lc_loans %>%
-  select(c(loan_status, loan_amnt, term, int_rate, installment, emp_length, home_ownership, annual_inc, verification_status, pymnt_plan, desc, purpose, debt_to_income_ratio, derog_pub_rec, mean_fico_scores, grade))
+  select(c(loan_status, loan_amnt, term, int_rate, emp_length, home_ownership, installment, annual_inc, verification_status, pymnt_plan, desc, purpose, debt_to_income_ratio, derog_pub_rec, mean_fico_scores, grade))
 head(ml_loans)
 
 ## Retro-actively taking out issue_d and sub_grade as these are variables with very high carnality. May put back into model at a later date
 
 ## Retro-actively taking out revol_util_rate as is has NA values, messing up the backwards selection. No clear relevance to loan_status
+
+# Installment and payment plan is given after the loan has been approved
 ```
 
-# ggpairs
+### Writing the Data for Python ML
+
+```{r}
+# write_csv(x = ml_loans_converted, here("clean_data/ml_data.csv"))
+```
+
+# 1. Examine relationships between Response and Predictor variables in ggpairs
 
 ## Splitting the data for ggpairs
 
@@ -185,21 +193,104 @@ ggplot(ml_loans) +
 ```
 
 
-# Backwards Selection to Identify the most notable variables
+# 2. Convert all character to factor columns
 
 ```{r}
+ml_loans_converted <- ml_loans %>%
+  mutate(loan_status = if_else(loan_status == "Fully Paid", 0, 1)) %>%
+  mutate_if(is_character, as_factor) 
+```
+
+# 3. Investigate the forwards and backwards selection
+
+## Backwards Selection
+
+```{r}
+# Backwards Selection to Identify the most notable variables
+
 library(leaps)
 
-regsubsets_backward <- regsubsets(loan_status ~ ., data = ml_loans, nvmax = 12, method = "backward")
+regsubsets_backward <- regsubsets(loan_status ~ ., data = ml_loans_converted, nvmax = 20, method = "backward")
 
 plot(regsubsets_backward, scale = "bic")
+
+# Looks like term_60_months is first, then installments, purposeCAR and then home_ownershipNONE
+```
+
+```{r}
+summary_regsubsets_backward <- summary(regsubsets_backward)
+summary_regsubsets_backward
+
+# int_rate, term60, purposesmall_business in order of importance
+```
+
+## Forward Selection
+
+```{r}
+# Backwards Selection to Identify the most notable variables
+
+library(leaps)
+
+regsubsets_forward <- regsubsets(loan_status ~ ., data = ml_loans_converted, nvmax = 20, method = "forward")
+
+plot(regsubsets_forward, scale = "bic")
+
+
+# Looks like term_60_months is first, then installments, purposeCAR and then home_ownershipNONE.
+```
+
+```{r}
+summary_regsubsets_forward <- summary(regsubsets_forward)
+summary_regsubsets_forward
+
+# int_rate, term60, purposesmall_business in order of importance
+```
+
+**Forwards and Backwards Selection give the same result**
+
+```{r}
+plot(summary_regsubsets_forward$rsq, type = "b")
+```
+
+```{r}
+plot(summary_regsubsets_forward$bic, type = "b")
 ```
 
 
-# Summary of ml_loans
+
+
+# 4. Perform a Logistic Regression
+
+* # Looks like term_60_months is first, then installments, purposeCAR and then home_ownershipNONE
 
 ```{r}
-summary(ml_loans)
+library(fastDummies)
 
+
+```
+
+
+```{r}
+# Term Length
+model_1_pred_term <- glm(loan_status ~ term,
+                         data = ml_loans_converted,
+                         family = binomial(link = "logit"))
+
+# Installments 
+model_2_pred_installments <- glm(loan_status ~ installment,
+                                 data = ml_loans_converted,
+                                 family = binomial(link = "logit"))
+
+# Purpose == Car 
+model_3_pred_purposecar <- glm(loan_status ~ purpose,
+                               data = ml_loans_converted,
+                               family = binomial(link = "logit"))
+
+# Home Ownership == None
+model_4_pred_homeownershipnone <- glm(loan_status ~ home_ownership,
+                                      data = ml_loans_converted,
+                                      family = binomial(link = "logit"))
+
+colnames(ml_loans_converted)
 ```
 
