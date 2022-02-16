@@ -1,15 +1,9 @@
 ---
-title: "Final project documentation template - PDA"
-output:
-  html_document:
-    toc: yes
-    toc_float: yes
-    df_print: paged
-    css: ../../../styles.css
-    pdf_document: default
-  word_document:
-    toc: yes
+title: "Final Project: Lending Club Outline"
+author: "Jonathan Nelson"
+output: html_document
 ---
+
 
 # General
 
@@ -43,14 +37,22 @@ Use this template with associated subheadings to create the documentation to mak
 
 What insights can the business/organisation gain from your analysis and how will your analysis help the business/organisation make better decisions? 
 
-* Building a Machine learning model to predict the likihood a new LendingClub loan will result in default to help make better business decisions
+* Using descriptive analytics, I was able to look at the data provided to find correlations between certain demographics and the likelihood that these demographics will default on a loan. 
+* The descriptive analytics help Lending Club inform the grading and therefore the interest rate assigned to an individuals loan, by assigning the risk of default.
+
+* Using predictive analytics, I was able to build several machine learning models to predict who will default in the future. Using the best machine model allows Lending Club to predict if someone will default on a loan, or not. Using the best model allows Lending Club to inform investors of different risks categories associated with the various grades of loan, allowing for a better understanding between the investors and Lending Club, which instills trust in the investors about the loans they are buying.
 
 #### Domain knowledge and the business context
 
 Briefly describe the business/organisation and where your analysis fits within its aims/activity. 
 
-* Lending Club - Describe as a company
-* Lending Club aims to approve loans that will be paid in full with interest back to the company, while minimizing defaults. Knowing many variables about a potential new customer and running these through the ML model will predict how likely that person will be to pay back, therefore minimzing risk for lending club.
+* Lending Club is a peer-to-peer marketplace for small unsecured loans, connecting investors with borrowers directly. 
+
+* Lending Club approves loans that they anticipate will be paid in full with interest back to the investors, while minimizing defaults. Knowing many variables about a potential new customer allows Lending Club to categorize the borrowers based on the application form, credit history and financial market conditions.
+
+* Lending Club aims to make as much commission as possible from issuing these loans, however, it is important that a level of trust is maintained particularly to the investors. 
+
+* My analysis helps Lending Club look backwards and forwards at any individual borrower and assess their risk of default. It is very important that this is done accurately as investors trust the grades of loans they are being sold to only have a certain default rate, for the investors to make returns.
 
 ## Data
 
@@ -64,9 +66,16 @@ Briefly describe your data sources and which were internal (provided by the orga
 
 What kind of data did you work with? E.g. categorical and numerical data and their sub-types.
 
+* the data contained text data, numeric data and dates.
+* I chose to exclude analysis of the date data as I anticipated this would be skewed by the 08' finacial crisis, as the data is given from 2007 - 2011.
+* For some analysis I converted continuous numeric variables to intergers and then grouped the integers in specific ranges to get proportions to fit onto histogram plots.
+* In the machine learning section, character variables were either mutated to binary variables or made into dummy variables (TRUE/FALSE).
+
 #### Data formats
 
 What format did your data come in? E.g. all downloaded flat files (CSV) or any data from APIs, scraping etc.
+
+*
 
 #### Data quality and bias
 
