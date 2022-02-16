@@ -614,9 +614,11 @@ lc_loans %>%
 ```{r}
 lc_loans %>%
   mutate(dollar_amount = total_pymnt - loan_amnt,
-         percentage_change = (dollar_amount / loan_amnt) * 100) %>%
+         percentage_change = (dollar_amount / loan_amnt) * 100,
+         colours = if_else(dollar_amount <= 0, "Loss", "Gain")) %>%
+  # select(c(dollar_amount, percentage_change, colours))
   ggplot() +
-  geom_density(aes(x = dollar_amount), bins = 1000, fill = "steel blue") +
+  geom_density(aes(x = dollar_amount, fill = colours), bins = 1000) +
   scale_fill_discrete() + 
   theme_bw() +
   theme(axis.line = element_line(colour = "black"),
@@ -731,6 +733,99 @@ qda_rose_wflw
 ```{r}
 set.seed(5732)
 cv_folds <- vfold_cv(balanced_data, strata = "Class", repeats = 5)
+```
+# Debt to Income ratio
+
+## Getting the proportions
+
+```{r}
+range(lc_loans$debt_to_income_ratio)
+# 0 - 30 Debt-Income-Ratio
+
+proportion_annual_income <- lc_loans %>%
+  mutate(loan_status = if_else(loan_status == "Fully Paid", 1, 0),
+         debt_to_income_ratio = case_when(
+           debt_to_income_ratio < 1 ~ "0-1",
+           debt_to_income_ratio > 1 & debt_to_income_ratio <= 2 ~ "1 - 2",
+           debt_to_income_ratio > 2 & debt_to_income_ratio <= 3 ~ "2 - 3",
+           debt_to_income_ratio > 3 & debt_to_income_ratio <= 4 ~ "3 - 4",
+           debt_to_income_ratio > 4 & debt_to_income_ratio <= 5 ~ "4 - 5",
+           debt_to_income_ratio > 2 & debt_to_income_ratio <= 3 ~ "2 - 3",
+           TRUE ~ "None"
+           ),
+         annual_inc = factor(x = annual_inc,
+                             levels = c("5000 or less", "5000 - 10000", "10000 - 15000", "15000 - 20000", "20000 - 25000", "25000 - 30000", "30000 - 35000", "35000 - 40000", "40000 - 45000", "45000 - 50000", "50000 - 55000", "55000 - 60000", "60000 - 65000", "65000 - 70000", "70000 - 75000", "75000 - 80000", "80000 - 85000", "85000 - 90000", "90000 - 95000", "95000 - 100,000", "100,000 - 105,000", "105,000 - 110,000", "110,000 - 115,000", "115,000 - 120,000", "120,000 - 125,000", "125,000 - 130,000", "130,000 - 135,000", "135,000 - 140,000", "140,000 - 145,000","145,000 - 150,000", "150,000 +"),
+                             labels = c("5000 or less", "5000 - 10000", "10000 - 15000", "15000 - 20000", "20000 - 25000", "25000 - 30000", "30000 - 35000", "35000 - 40000", "40000 - 45000", "45000 - 50000", "50000 - 55000", "55000 - 60000", "60000 - 65000", "65000 - 70000", "70000 - 75000", "75000 - 80000", "80000 - 85000", "85000 - 90000", "90000 - 95000", "95000 - 100,000", "100,000 - 105,000", "105,000 - 110,000", "110,000 - 115,000", "115,000 - 120,000", "120,000 - 125,000", "125,000 - 130,000", "130,000 - 135,000", "135,000 - 140,000", "140,000 - 145,000","145,000 - 150,000", "150,000 +")
+        )) %>%
+  group_by(annual_inc, loan_status) %>%
+  summarise(n = n()) %>%
+  mutate(proportions = n / sum(n)) %>%
+  filter(loan_status == 1) %>%
+  select(annual_inc, proportions, n) 
+
+write_csv(x = prop_sub_grade, here("clean_data/summary_table.csv"))
+```
+
+## Joining the Proportions onto the orginal data set
+
+```{r}
+full_table_annual_income <- lc_loans %>%
+  mutate(loan_status = if_else(loan_status == "Fully Paid", 1, 0),
+         annual_inc = case_when(
+           annual_inc < 5000 ~ "5000 or less",
+           annual_inc > 5000 & annual_inc <= 10000 ~ "5000 - 10000",
+           annual_inc > 10000 & annual_inc <= 15000 ~ "10000 - 15000",
+           annual_inc > 15000 & annual_inc <= 20000 ~ "15000 - 20000",
+           annual_inc > 20000 & annual_inc <= 25000 ~ "20000 - 25000",
+           annual_inc > 25000 & annual_inc <= 30000 ~ "25000 - 30000",
+           annual_inc > 30000 & annual_inc <= 35000 ~ "30000 - 35000",
+           annual_inc > 35000 & annual_inc <= 40000 ~ "35000 - 40000",
+           annual_inc > 40000 & annual_inc <= 45000 ~ "40000 - 45000",
+           annual_inc > 45000 & annual_inc <= 50000 ~ "45000 - 50000",
+           annual_inc > 50000 & annual_inc <= 55000 ~ "50000 - 55000",
+           annual_inc > 55000 & annual_inc <= 60000 ~ "55000 - 60000",
+           annual_inc > 60000 & annual_inc <= 65000 ~ "60000 - 65000",
+           annual_inc > 65000 & annual_inc <= 70000 ~ "65000 - 70000",
+           annual_inc > 70000 & annual_inc <= 75000 ~ "70000 - 75000",
+           annual_inc > 75000 & annual_inc <= 80000 ~ "75000 - 80000",
+           annual_inc > 80000 & annual_inc <= 85000 ~ "80000 - 85000",
+           annual_inc > 85000 & annual_inc <= 90000 ~ "85000 - 90000",
+           annual_inc > 90000 & annual_inc <= 95000 ~ "90000 - 95000",
+           annual_inc > 95000 & annual_inc <= 100000 ~ "95000 - 100,000",
+           annual_inc > 100000 & annual_inc <= 105000 ~ "100,000 - 105,000",
+           annual_inc > 105000 & annual_inc <= 110000 ~ "105,000 - 110,000",
+           annual_inc > 110000 & annual_inc <= 115000 ~ "110,000 - 115,000",
+           annual_inc > 115000 & annual_inc <= 120000 ~ "115,000 - 120,000",
+           annual_inc > 120000 & annual_inc <= 125000 ~ "120,000 - 125,000",
+           annual_inc > 125000 & annual_inc <= 130000 ~ "125,000 - 130,000",
+           annual_inc > 130000 & annual_inc <= 135000 ~ "130,000 - 135,000",
+           annual_inc > 135000 & annual_inc <= 140000 ~ "135,000 - 140,000",
+           annual_inc > 140000 & annual_inc <= 145000 ~ "140,000 - 145,000",
+           annual_inc > 145000 & annual_inc <= 150000 ~ "145,000 - 150,000",
+           TRUE ~ "150,000 +"
+           ),
+         annual_inc = factor(x = annual_inc,
+                             levels = c("5000 or less", "5000 - 10000", "10000 - 15000", "15000 - 20000", "20000 - 25000", "25000 - 30000", "30000 - 35000", "35000 - 40000", "40000 - 45000", "45000 - 50000", "50000 - 55000", "55000 - 60000", "60000 - 65000", "65000 - 70000", "70000 - 75000", "75000 - 80000", "80000 - 85000", "85000 - 90000", "90000 - 95000", "95000 - 100,000", "100,000 - 105,000", "105,000 - 110,000", "110,000 - 115,000", "115,000 - 120,000", "120,000 - 125,000", "125,000 - 130,000", "130,000 - 135,000", "135,000 - 140,000", "140,000 - 145,000","145,000 - 150,000", "150,000 +"),
+                             labels = c("5000 or less", "5000 - 10000", "10000 - 15000", "15000 - 20000", "20000 - 25000", "25000 - 30000", "30000 - 35000", "35000 - 40000", "40000 - 45000", "45000 - 50000", "50000 - 55000", "55000 - 60000", "60000 - 65000", "65000 - 70000", "70000 - 75000", "75000 - 80000", "80000 - 85000", "85000 - 90000", "90000 - 95000", "95000 - 100,000", "100,000 - 105,000", "105,000 - 110,000", "110,000 - 115,000", "115,000 - 120,000", "120,000 - 125,000", "125,000 - 130,000", "130,000 - 135,000", "135,000 - 140,000", "140,000 - 145,000","145,000 - 150,000", "150,000 +")
+        ))
+
+left_join(full_table_annual_income, proportion_annual_income, by = "annual_inc") %>%
+  filter(annual_inc != "150,000 +") %>%
+  ggplot() + 
+  aes(x = annual_inc, fill = proportions) +
+  geom_histogram(stat = "count") +
+  scale_fill_distiller(palette = 11) + 
+  theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.text.x = element_text(angle = 60, vjust = 0.55)) +
+  xlab("Sub Grade") +
+  ylab("Count") +
+  ggtitle("Histogram for Default Rates by Annual Income") +
+  guides(fill = guide_legend(title = "Proportions")) 
 ```
 
 # Questions
