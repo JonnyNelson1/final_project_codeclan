@@ -195,75 +195,143 @@ pre code {
 <p>Use this template with associated subheadings to create the documentation to make sure you cover all necessary learning outcomes for the PDA. If you have any questions, just let an instructor know.</p>
 </div>
 <div id="context" class="section level2">
-<h2>Context</h2>
+<h2><strong>Context</strong></h2>
+<p><br></p>
 <div id="business-intelligence-and-data-driven-decision-making" class="section level4">
-<h4>Business intelligence and data-driven decision making</h4>
-<p>What insights can the business/organisation gain from your analysis and how will your analysis help the business/organisation make better decisions?</p>
+<h4><strong>Business intelligence and data-driven decision making</strong></h4>
+<p><strong>What insights can the business/organisation gain from your analysis and how will your analysis help the business/organisation make better decisions?</strong></p>
 <ul>
-<li>Building a Machine learning model to predict the likihood a new LendingClub loan will result in default to help make better business decisions</li>
+<li><p>Using descriptive analytics, I was able to look at the data provided to find correlations between certain demographics and the likelihood that these demographics will default on a loan.</p></li>
+<li><p>The descriptive analytics help Lending Club inform the grading and therefore the interest rate assigned to an individuals loan, by assigning the risk of default.</p></li>
+<li><p>Using predictive analytics, I was able to build several machine learning models to predict who will default in the future. Using the best machine model allows Lending Club to predict if someone will default on a loan, or not. Using the best model allows Lending Club to inform investors of different risks categories associated with the various grades of loan, allowing for a better understanding between the investors and Lending Club, which instills trust in the investors about the loans they are buying.</p></li>
 </ul>
+<p><br></p>
 </div>
 <div id="domain-knowledge-and-the-business-context" class="section level4">
-<h4>Domain knowledge and the business context</h4>
-<p>Briefly describe the business/organisation and where your analysis fits within its aims/activity.</p>
+<h4><strong>Domain knowledge and the business context</strong></h4>
+<p><strong>Briefly describe the business/organisation and where your analysis fits within its aims/activity.</strong></p>
 <ul>
-<li>Lending Club - Describe as a company</li>
-<li>Lending Club aims to approve loans that will be paid in full with interest back to the company, while minimizing defaults. Knowing many variables about a potential new customer and running these through the ML model will predict how likely that person will be to pay back, therefore minimzing risk for lending club.</li>
+<li><p>Lending Club is a peer-to-peer marketplace for small unsecured loans, connecting investors with borrowers directly.</p></li>
+<li><p>Lending Club approves loans that they anticipate will be paid in full with interest back to the investors, while minimizing defaults. Knowing many variables about a potential new customer allows Lending Club to categorize the borrowers based on the application form, credit history and financial market conditions.</p></li>
+<li><p>Lending Club aims to make as much commission as possible from issuing these loans, however, it is important that a level of trust is maintained particularly to the investors.</p></li>
+<li><p>My analysis helps Lending Club look backwards and forwards at any individual borrower and assess their risk of default. It is very important that this is done accurately as investors trust the grades of loans they are being sold to only have a certain default rate, for the investors to make returns.</p></li>
 </ul>
+<p><br></p>
 </div>
 </div>
 <div id="data" class="section level2">
-<h2>Data</h2>
+<h2><strong>Data</strong></h2>
+<p><br></p>
 <div id="internal-and-external-data-sources" class="section level4">
-<h4>Internal and external data sources</h4>
+<h4><strong>Internal and external data sources</strong></h4>
 <p>Briefly describe your data sources and which were internal (provided by the organisation) and external (not sourced from the organisation’s data)</p>
+<p><strong>Internal data sources:</strong></p>
 <ul>
-<li></li>
+<li>Lending Club Loans Data - the main data set.</li>
+<li>Lending Club Dictionary - Data Dictionary informing the variables</li>
+<li>State Names Info - Full state name with the key in the main data set</li>
+<li>Grade Info - Overall grade (A-G) with the key in the main data set</li>
 </ul>
+<p><br></p>
 </div>
 <div id="types-of-data" class="section level4">
-<h4>Types of data</h4>
-<p>What kind of data did you work with? E.g. categorical and numerical data and their sub-types.</p>
+<h4><strong>Types of data</strong></h4>
+<p><strong>What kind of data did you work with? E.g. categorical and numerical data and their sub-types.</strong></p>
+<ul>
+<li>The data contained text data, numeric data and dates.</li>
+<li>I chose to exclude analysis of the date data as I anticipated this would be skewed by the 08’ finacial crisis, as the data is given from 2007 - 2011.</li>
+<li>For analysis, I converted continuous numeric variables to integers and then grouped the integers in specific ranges to get proportions to fit onto histogram plots.</li>
+<li>In the machine learning section, character variables were either mutated to binary variables or made into dummy variables (TRUE/FALSE).</li>
+</ul>
+<p><br></p>
 </div>
 <div id="data-formats" class="section level4">
-<h4>Data formats</h4>
-<p>What format did your data come in? E.g. all downloaded flat files (CSV) or any data from APIs, scraping etc.</p>
+<h4><strong>Data formats</strong></h4>
+<p><strong>What format did your data come in? E.g. all downloaded flat files (CSV) or any data from APIs, scraping etc.</strong></p>
+<ul>
+<li>The data format was 3 csv files</li>
+<li>All the data was then joined to make one csv file, which I used in analysis.</li>
+</ul>
+<p><br></p>
 </div>
 <div id="data-quality-and-bias" class="section level4">
-<h4>Data quality and bias</h4>
-<p>Briefly describe the quality of the data and whether you have any reasons to suggest the data is biased e.g. only data from a specific demographic even though a broader demographic would be of interest to the organisation.</p>
+<h4><strong>Data quality and bias</strong></h4>
+<p><strong>Briefly describe the quality of the data and whether you have any reasons to suggest the data is biased e.g. only data from a specific demographic even though a broader demographic would be of interest to the organisation.</strong></p>
+<ul>
+<li><p>The data is given from 2007 - 2011, which overlaps with the great financial crisis of 2008, so there may be a bias in the default rates for this given period.</p></li>
+<li><p>The data only shows approved applications for individuals, so my analysis and machine learning models can only be applied to individuals - unless a new data set is supplied. Further analysis would be required if partners data was available.</p></li>
+<li><p>As ~ 85% of loans are fully paid and only ~ 15% are defaulted on, this innate data bias makes building the model very difficult. No investor will take on a loan where a default rate is greater than 50% as the average losses in defaulted loans are ~ 50%. See graph below</p></li>
+</ul>
+<div class="figure">
+<img src="data:image/png;base64,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" alt />
+<p class="caption">Plot for Losses/Gains</p>
+</div>
+<ul>
+<li>Aside from that, the data quality is very good and provides a lot of insight into the loans made.</li>
+</ul>
+<p><br></p>
 </div>
 </div>
 <div id="ethics" class="section level2">
-<h2>Ethics</h2>
+<h2><strong>Ethics</strong></h2>
+<p><br></p>
 <div id="ethical-issues-in-data-sourcing-and-extraction" class="section level4">
-<h4>Ethical issues in data sourcing and extraction</h4>
-<p>Do you have any ethical concerns regarding the sourcing and extraction of your data?</p>
+<h4><strong>Ethical issues in data sourcing and extraction</strong></h4>
+<p><strong>Do you have any ethical concerns regarding the sourcing and extraction of your data?</strong></p>
+<ul>
+<li><p>The data is sourced and extracted at the borrowers permission in the application stage of the loan.</p></li>
+<li><p>There is variable I found questionable, “credit inquiries &lt; 6 months”. This variable is pulled on the applicant to see if they have inquired about lines of credit in the past 6 months. I think this is ethically questionable, as if you are denied access to credit, it goes on your credit record and makes it much more difficult to get a loan in the near future.</p></li>
+</ul>
+<p><br></p>
 </div>
 <div id="ethical-implications-of-business-requirements" class="section level4">
-<h4>Ethical implications of business requirements</h4>
-<p>Are there any ethical implications of the business requirements?</p>
+<h4><strong>Ethical implications of business requirements</strong></h4>
+<p><strong>Are there any ethical implications of the business requirements?</strong></p>
+<ul>
+<li>In terms of Machine Learning, there may be ethical considerations when using such a model to determine who does and does not get a loan. It is important the model is not discriminating explicitly on any variables outside the applicants control, however, no such variables are supplied.</li>
+</ul>
+<p><br></p>
 </div>
 </div>
 <div id="analysis" class="section level2">
 <h2>Analysis</h2>
+<p><br></p>
 <div id="stages-in-the-data-analysis-process" class="section level4">
-<h4>Stages in the data analysis process</h4>
-<p>What were the main stages in your data analysis process?</p>
+<h4><strong>Stages in the data analysis process</strong></h4>
+<p><strong>What were the main stages in your data analysis process?</strong></p>
+<ol style="list-style-type: decimal">
+<li>Understanding the Data using the data dictionary</li>
+<li>Initial Data Exploration of the variables</li>
+<li>Data Cleaning, culminating with a data cleaning script</li>
+<li>Data Exploration and Analysis, looking at which variables inform loan_status. Using simple statistics proportions, percentages and averages to better explain these.</li>
+<li>Planning the Machine Learning Model Process.</li>
+<li>Building Machine Learning Models using Logistic Regression and Random Forests.</li>
+</ol>
+<p><br></p>
 </div>
 <div id="tools-for-data-analysis" class="section level4">
-<h4>Tools for data analysis</h4>
-<p>What were the main tools you used for your analysis?</p>
+<h4><strong>Tools for data analysis</strong></h4>
+<p><strong>What were the main tools you used for your analysis?</strong></p>
+<ul>
+<li>R and RStudio</li>
+<li>Python</li>
+</ul>
+<p><br></p>
 </div>
 <div id="descriptive-diagnostic-predictive-and-prescriptive-analysis" class="section level4">
-<h4>Descriptive, diagnostic, predictive and prescriptive analysis</h4>
-<p>Please report under which of the below categories your analysis falls <strong>and why</strong> (can be more than one)</p>
+<h4><strong>Descriptive, diagnostic, predictive and prescriptive analysis</strong></h4>
+<p><strong>Please report under which of the below categories your analysis falls <strong>and why</strong> (can be more than one)</strong></p>
 <div class="emphasis">
 <p><strong>Descriptive Analytics</strong> tells you what happened in the past.</p>
-<p><strong>Diagnostic Analytics</strong> helps you understand why something happened in the past.</p>
+<ul>
+<li>I was able to retroactively look backwards at the loans that had come to maturity and explore which variables informed the loan status.</li>
+</ul>
 <p><strong>Predictive Analytics</strong> predicts what is most likely to happen in the future.</p>
-<p><strong>Prescriptive Analytics</strong> recommends actions you can take to affect those outcomes.</p>
+<ul>
+<li>Using machine learning models, I was able to look forward to try and predict who is going to default on their loan or not, based on the information supplied by the applicant and the credit report.</li>
+</ul>
 </div>
+<p><br></p>
 </div>
 </div>
 </div>
