@@ -73,8 +73,16 @@ lc_loans %>%
   xlab("Loan Status") +
   ylab("Count") +
   ggtitle("Count for Loan Status") +
-  guides(fill = guide_legend(title = "Loan Status")) 
-  # scale_y_continuous(labels = scales::percent)
+  guides(fill = guide_legend(title = "Loan Status")) +
+  theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank()) +
+  xlab("Loan Status") +
+  ylab("Count") +
+  ggtitle("Default Rates") 
 
 # 14.41 85.59
 ```
@@ -140,7 +148,28 @@ left_join(lc_loans, prop_sub_grade, by = "sub_grade", colour = "black") %>%
   guides(fill = guide_legend(title = "Proportions")) 
 ```
 
+# Interest Rate
 
+```{r}
+prop_int_rate <- lc_loans %>%
+  mutate(loan_status = if_else(loan_status == "Fully Paid", 1, 0),
+         int_rate = as.integer(int_rate)) %>%
+  group_by(int_rate, loan_status) %>%
+  summarise(n = n()) %>%
+  mutate(proportions = n / sum(n)) %>%
+  filter(loan_status == 1) %>%
+  select(int_rate, proportions, n)
+
+write_csv(x = prop_sub_grade, here("clean_data/summary_table.csv"))
+```
+
+## Joining the Proportions onto the orginal data set
+
+```{r}
+lc_loans %>%
+  ggplot(aes(x = int_rate, y = sub_grade)) +
+  geom_point()
+```
 # Loan Status split by Annual Income
 
 ## Histograms for Annual Income by Loan Status
@@ -156,7 +185,7 @@ range(lc_loans$annual_inc)
 ```{r}
 # Change line colors by groups
 ggplot(lc_loans, aes(x=annual_inc, color=loan_status, fill=loan_status)) +
-geom_histogram(aes(y=stat(count)), position="identity", alpha=0.6)+
+geom_histogram(aes(y=stat(count)), position="identity", alpha=0.5)+
 geom_density(alpha=0.6)+
 # geom_vline(lc_loans=mu, aes(xintercept=grp.mean, color=loan_status),
 #            linetype="dashed")+
@@ -165,6 +194,10 @@ geom_density(alpha=0.6)+
 xlim(0, 250000)
 labs(title="Weight histogram plot",x="Weight(kg)", y = "Density")+
 theme_classic()
+
+ggplot(lc_loans, aes(x=annual_inc, color=loan_status, fill=loan_status)) +
+geom_density(aes(y=stat(count)), position="identity", alpha = 0.2) +
+  xlim(0, 250000)
 ```
 
 
@@ -181,8 +214,25 @@ lc_loans %>%
   xlab("Loan Status") +
   ylab("Count") +
   ggtitle("Count for Loan Status") +
-  guides(fill = guide_legend(title = "Term Length")) 
+  guides(fill = guide_legend(title = "Term Length")) +
+    theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank()) 
   # scale_y_continuous(labels = scales::percent)
+```
+
+# Term Length Summary
+
+```{r}
+lc_loans %>%
+  mutate(loan_status = if_else(loan_status == "Fully Paid", 1, 0)) %>%
+  group_by(term, loan_status) %>%
+  summarise(n = n()) %>%
+  mutate(proportions = n / sum(n)) %>%
+  select(term, proportions, n)
 ```
 
 * Very stark split between loan_status based on the term.
@@ -450,6 +500,65 @@ lc_loans %>%
   ggtitle("Histogram of the Borrowers by Mean FICO scores")
 ```
 
+## Proportions Mean FICO scores
+
+```{r}
+prop_fico_scores <- lc_loans %>%
+  mutate(loan_status = if_else(loan_status == "Fully Paid", 1, 0),
+         mean_fico_scores = as.integer(mean_fico_scores)) %>%
+  group_by(mean_fico_scores, loan_status) %>%
+  summarise(n = n()) %>%
+  mutate(proportions = n / sum(n)) %>%
+  filter(loan_status == 1) %>%
+  select(mean_fico_scores, proportions, n)
+
+ggplot(prop_fico_scores) +
+  aes(x = mean_fico_scores, fill = proportions) +
+  geom_histogram(stat = "count") +
+  scale_fill_distiller(palette = 11) + 
+  theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.text.x = element_text(angle = 60, vjust = 0.55)) +
+  xlab("Sub Grade") +
+  ylab("Count") +
+  ggtitle("Histogram for Default Rates by Annual Income") +
+  guides(fill = guide_legend(title = "Proportions")) +
+  xlim(650, 850)
+  
+```
+
+## Mean FICO Scores Histogram
+
+```{r}
+fico_lc_loans <- lc_loans %>%
+    mutate(loan_status = if_else(loan_status == "Fully Paid", 1, 0),
+           mean_fico_scores = as.integer(mean_fico_scores))
+ 
+
+ new_table <- left_join(fico_lc_loans, prop_fico_scores, by = "mean_fico_scores")
+ 
+ggplot(new_table) + 
+  aes(x = mean_fico_scores, fill = proportions) +
+  geom_histogram(stat = "count") +
+  scale_fill_distiller(palette = 11) + 
+  theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.text.x = element_text(angle = 60, vjust = 0.55)) +
+  xlab("Sub Grade") +
+  ylab("Count") +
+  ggtitle("Histogram for Default Rates by Annual Income") +
+  guides(fill = guide_legend(title = "Proportions")) +
+  xlim(650, 850)
+```
+
 # Description is NA or not split to see if that affects the default rate
 
 ```{r}
@@ -507,7 +616,18 @@ lc_loans %>%
   mutate(dollar_amount = total_pymnt - loan_amnt,
          percentage_change = (dollar_amount / loan_amnt) * 100) %>%
   ggplot() +
-  geom_histogram(aes(x = dollar_amount), bins = 1000, fill = "steel blue")
+  geom_density(aes(x = dollar_amount), bins = 1000, fill = "steel blue") +
+  scale_fill_discrete() + 
+  theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank()) +
+  xlab("Dollar Amount") +
+  ylab("Count") +
+  ggtitle("Histogram for Losses/Gains") +
+  guides(fill = guide_legend(title = "Dollar Amount")) 
 ```
 
 * The graph above visualizes the absolute amount of dollars gained or lost on all the loans.
@@ -521,7 +641,18 @@ lc_loans %>%
   mutate(dollar_amount = total_pymnt - loan_amnt,
          percentage_change = (dollar_amount / loan_amnt) * 100) %>%
   ggplot() +
-  geom_histogram(aes(x = percentage_change), bins = 1000, fill = "steel blue")
+  geom_density(aes(x = percentage_change), bins = 1000, fill = "Steel Blue") +
+  scale_fill_discrete() + 
+  theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank()) +
+  xlab("Percentage Change") +
+  ylab("Denisty") +
+  ggtitle("Histogram for Percent Gain/Lost") +
+  guides(fill = guide_legend(title = "Percentage Change")) 
 ```
 
 * The loans that are charged off have a very wide distribution in terms of returns. If an investor is unlucky enough to invest in a loan that will be charged off, the mean losses are around 50%

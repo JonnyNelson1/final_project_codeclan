@@ -494,4 +494,43 @@ best_model <- glm(
 
 # Highest AUC value for the test set - 0.7015
 ```
+## Results
+
+```{r}
+library(caret)
+
+## Train Control
+
+train_control <- trainControl(method = "repeatedcv", 
+                              number = 5,
+                              repeats = 100,
+                              savePredictions = TRUE, 
+                              classProbs = TRUE, 
+                              summaryFunction = twoClassSummary)
+
+## Best Model
+
+best_model_cv <- train(best_model$formula,
+                       data = ml_loans_converted,
+                       trControl = train_control,
+                       method = "glm",
+                       family = binomial(link = 'logit'))
+```
+
+## Up-Sampling
+
+```{r}
+# Loading the caret package
+library(caret)
+
+# Response as a factor
+train_subsampling <- train %>%
+  mutate(loan_status = factor(loan_status))
+
+
+up_train <- upSample(x = train_subsampling[, -ncol(train_subsampling)],
+                     y = train_subsampling$loan_status) 
+
+table(up_train$loan_status) 
+```
 

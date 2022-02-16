@@ -4,9 +4,160 @@ author: "Jonny Nelson"
 date: "15/02/2022"
 output: html_document
 ---
+--- 
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+# Everything Required Prior to Model Building
+
+```{r}
+# Loading Libraries 
+library(janitor)
+library(tidyverse)
+library(here)
+library(forcats)
+library(caret)
+
+# Importing clean data
+loans_clean <- read_csv(here("clean_data/loans_clean.csv"))
+
+# Variable Engineering
+lc_loans <- loans_clean %>%
+  filter(loan_status %in% c("Charged Off", "Fully Paid")) %>%
+  mutate(emp_length = factor(x = emp_length,
+                             levels = c("< 1 year", "2 years", "3 years", "4 years", "5 years", "6 years", "7 years", "8 years", "9 years", "10+ years"),
+                             labels = c("More than 1" , "2", "3", "4", "5", "6", "7", "8", "9", "10 +")),
+         desc = if_else(desc %in% NA, 0, 1 )) %>%
+  mutate(emp_length = fct_explicit_na(emp_length, "unknown"))
+
+# Variable Selection
+ml_loans <- lc_loans %>%
+  select(c(loan_status, loan_amnt, term, int_rate, emp_length, home_ownership, installment, annual_inc, verification_status, pymnt_plan, desc, purpose, debt_to_income_ratio, derog_pub_rec, mean_fico_scores, grade))
+head(ml_loans)
+
+# Character to Factor
+ml_loans_converted <- ml_loans %>%
+  mutate(loan_status = if_else(loan_status == "Fully Paid", 0, 1)) %>%
+  mutate_if(is_character, as_factor)
+
+# Test Train Split
+set.seed(7)
+
+test_indices <- sample(1:nrow(ml_loans_converted), size = as.integer(nrow(ml_loans_converted) * 0.2))
+
+train <- ml_loans_converted %>%
+  slice(-test_indices)
+
+test <- ml_loans_converted %>%
+  slice(test_indices)
+
+# Response as a factor
+train_subsampling <- train %>%
+  mutate(loan_status = factor(loan_status))
+
+up_train <- upSample(x = train_subsampling[, -ncol(train_subsampling)],
+                     y = train_subsampling$loan_status) 
+
+table(up_train$loan_status) 
+```
+# Model Building
+
+```{r}
+# Loading the library
+library(glmulti)
+
+# Model 1
+model_1 <- glm(loan_status ~ ., data = up_train, family = binomial(link = "logit"))
+
+summary(model_1)
 ```
 
+## Best Model with No Interactions
+
+```{r}
+glmulti_search_all_mains <- glmulti(
+  loan_status ~ ., 
+  data = up_train,
+  level = 1,               # No interaction considered
+  method = "h",            # Exhaustive approach
+  crit = "bic",            # BIC as criteria
+  confsetsize = 10,        # Keep 10 best models
+  plotty = F, 
+  report = T,              # No plots, but provide interim reports
+  fitfunction = "glm",     # glm function
+  family = binomial(link = "logit")) # binomial family for logistic regression
+
+summary(glmulti_search_all_mains)
+
+# After 1100 models:
+# Best model: loan_status~1+term+int_rate+annual_inc+debt_to_income_ratio+derog_pub_rec
+# Crit= 69100.0932672863
+# Mean crit= 69107.781192626
+```
+
+## Comparing AUC value
+
+```{r}
+library(pROC)
+library(modelr)
+```
+
+## Model with main BIC
+
+### AUC Train
+
+```{r}
+model_with_mains_bic <- glm(
+  loan_status ~ term + int_rate + annual_inc + debt_to_income_ratio + derog_pub_rec,
+  data = up_train,
+  family = binomial(link = "logit")
+)
+
+roc <- train %>%
+  add_predictions(model_with_mains_bic, type = "response") %>%
+  roc(response = loan_status, predictor = pred)
+
+auc(roc)
+# AUC = 0.6815
+
+plot(roc)
+# The Receiver Operator Characteristic (ROC) curve is an evaluation metric for binary classification problems. It is a probability curve that plots the TPR against FPR at various threshold values and essentially separates the ‘signal’ from the ‘noise’. The Area Under the Curve (AUC) is the measure of the ability of a classifier to distinguish between classes and is used as a summary of the ROC curve.
+
+# The higher the AUC, the better the performance of the model at distinguishing between the positive and negative classes.
+
+# Our model performance, with an AUC of 0.7, is able to predict loans that will default with reasonable performance. It is only able to just about distinguish between True and False results.
+```
+
+### AUC Test
+
+```{r}
+roc <- test %>%
+  add_predictions(model_with_mains_bic, type = "response") %>%
+  roc(response = loan_status, predictor = pred)
+
+# auc = 0.7004 -  what does this tell us?
+auc(roc)
+
+# Getting the confusion matrix
+threshold <- 0.5
+
+table <- test %>%
+    add_predictions(model_with_mains_bic, type = "response") %>%
+    mutate(pred_thres_0.5 = pred >= threshold,
+           loan_status = as.logical(loan_status))
+  
+conf_table <- table %>%
+  tabyl(loan_status, pred_thres_0.5)
+conf_table
+
+# True loan_status = did default
+# True pred_thres_0.5 = predicts default
+
+# TPR = 704
+# TNR = 4418
+# FPR = 2300
+# FNR = 425
+
+Sensitivity = 704/(704+2300) 
+specificity = 4418/ (4418 + 2300)
+Accuracy = (704 + 4418) / (704 + 4418 + 2300 + 425)
+```
 
