@@ -644,6 +644,8 @@ lc_loans %>%
          percentage_change = (dollar_amount / loan_amnt) * 100) %>%
   ggplot() +
   geom_density(aes(x = percentage_change), bins = 1000, fill = "Steel Blue") +
+  geom_vline(xintercept = -45.42379, col = "Red") +
+  geom_vline(xintercept = 18.25525, col = "Blue") +
   scale_fill_discrete() + 
   theme_bw() +
   theme(axis.line = element_line(colour = "black"),
@@ -659,6 +661,19 @@ lc_loans %>%
 
 * The loans that are charged off have a very wide distribution in terms of returns. If an investor is unlucky enough to invest in a loan that will be charged off, the mean losses are around 50%
 * Compared to loans that are fully paid back, the mean gains are only around around ~ 18%. So an investor would need far more loans that are paid back than loans defaulted, in their portfolio. 
+
+```{r}
+lc_loans %>%
+  mutate(dollar_amount = total_pymnt - loan_amnt,
+         percentage_change = (dollar_amount / loan_amnt) * 100,
+         negative_or_positive = if_else(percentage_change > 0, "positive", "negative")) %>%
+  # filter(percentage_change > 0) %>%
+  group_by(negative_or_positive) %>%
+  summarise(mean = mean(percentage_change),
+            standard_deviation = sd(percentage_change))
+
+```
+
 
 # Considering Subsampling for the imbalanced response variable
 
