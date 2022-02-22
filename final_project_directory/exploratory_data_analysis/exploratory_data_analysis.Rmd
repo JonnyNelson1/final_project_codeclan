@@ -862,7 +862,7 @@ left_join(full_table_dti, proportion_dti, by = "debt_to_income_ratio") %>%
     axis.text.x = element_text(angle = 60, vjust = 0.55)) +
   xlab("Sub Grade") +
   ylab("Count") +
-  ggtitle("Histogram for Default Rates by Annual Income") +
+  ggtitle("Histogram for Default Rates by Debt-to-Income") +
   guides(fill = guide_legend(title = "Proportions")) 
 ```
 
