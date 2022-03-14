@@ -639,13 +639,38 @@ lc_loans %>%
 # Distribution of Percentage Gain or Lost
 
 ```{r}
+# Summary Table
+summary_table_02 <- lc_loans %>%
+  mutate(dollar_amount = total_pymnt - loan_amnt,
+         percentage_change = (dollar_amount / loan_amnt) * 100,
+         negative_or_positive = if_else(percentage_change > 0,
+                                        "positive", "negative")) %>%
+  group_by(negative_or_positive) %>%
+  summarise(mean = mean(percentage_change),
+            standard_deviation = sd(percentage_change))
+
+# Pulling the Mean Values
+loss_mean <- summary_table_02[[1,2]]
+gain_mean <- summary_table_02[[2,2]]
+
+# Graph for Density of Percentage gained/lost on Loans Overall
 lc_loans %>%
   mutate(dollar_amount = total_pymnt - loan_amnt,
          percentage_change = (dollar_amount / loan_amnt) * 100) %>%
   ggplot() +
   geom_density(aes(x = percentage_change), bins = 1000, fill = "Steel Blue") +
-  geom_vline(xintercept = -45.42379, col = "Red") +
-  geom_vline(xintercept = 18.25525, col = "Blue") +
+  geom_vline(xintercept = loss_mean, col = "Red") +
+  geom_vline(xintercept = gain_mean, col = "Blue") +
+  annotate(x = loss_mean,
+           y = +Inf,
+           label = paste("Mean(Defaulted) =", round(loss_mean, 2), "%"),
+           vjust = 3,
+           geom = "label") +
+  annotate(x = gain_mean,
+           y = +Inf,
+           label = paste("Mean(Fully Paid) =", round(gain_mean, 2), "%"),
+           vjust = 3,
+           geom = "label") +
   scale_fill_discrete() + 
   theme_bw() +
   theme(axis.line = element_line(colour = "black"),
@@ -655,24 +680,12 @@ lc_loans %>%
     panel.background = element_blank()) +
   xlab("Percentage Change") +
   ylab("Denisty") +
-  ggtitle("Histogram for Percent Gain/Lost") +
+  ggtitle("Distribution for the Percentage Change from Original Loan Value") +
   guides(fill = guide_legend(title = "Percentage Change")) 
 ```
 
 * The loans that are charged off have a very wide distribution in terms of returns. If an investor is unlucky enough to invest in a loan that will be charged off, the mean losses are around 50%
 * Compared to loans that are fully paid back, the mean gains are only around around ~ 18%. So an investor would need far more loans that are paid back than loans defaulted, in their portfolio. 
-
-```{r}
-lc_loans %>%
-  mutate(dollar_amount = total_pymnt - loan_amnt,
-         percentage_change = (dollar_amount / loan_amnt) * 100,
-         negative_or_positive = if_else(percentage_change > 0, "positive", "negative")) %>%
-  # filter(percentage_change > 0) %>%
-  group_by(negative_or_positive) %>%
-  summarise(mean = mean(percentage_change),
-            standard_deviation = sd(percentage_change))
-
-```
 
 
 # Considering Subsampling for the imbalanced response variable
